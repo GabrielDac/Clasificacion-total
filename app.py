@@ -193,6 +193,11 @@ def consultar_fuente(fuente, isbn, autor, titulo):
         salida['registros'] = len(registros)
         for reg in registros:
             d = parsear_bibliografico(reg)
+            # En búsquedas por título, si hay autor conocido se exige coincidencia:
+            # evita que obras ajenas con títulos parecidos (p. ej. «Las nuevas
+            # venas abiertas…» de otro autor) se cuelen entre las ediciones.
+            if not isbn and autor and not _coincide_autor(d['autor'], autor):
+                continue
             base = {'ddc_edicion': d['ddc_edicion'], 'titulo': d['titulo'], 'autor': d['autor'],
                     'anio': d['anio'], 'editorial': d['editorial'], 'fuente': fuente['sigla']}
             for ddc in d['ddc']:
