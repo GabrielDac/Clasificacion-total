@@ -366,11 +366,11 @@ document.addEventListener('DOMContentLoaded',()=>{
  despertarMotor();           /* toque inicial */
  setInterval(despertarMotor,10*60*1000); /* y cada 10 min: mientras haya una pestaña abierta, no se duerme */
 });
-async function fetchMotor(isbn){
+async function fetchMotor(consulta){
  const ctrl=new AbortController();
  const timer=setTimeout(()=>ctrl.abort(),110000); /* margen amplio: puede estar despertando */
  try{
-  const r=await fetch(MOTOR+'/api/dewey?isbn='+isbn,{signal:ctrl.signal});
+  const r=await fetch(MOTOR+'/api/dewey?'+consulta,{signal:ctrl.signal});
   if(!r.ok)throw new Error('HTTP '+r.status);
   motorListo=true;
   return await r.json();
@@ -462,18 +462,21 @@ async function classify(silent){
  try{
   let real=[],msg='';
   /* 1) Open Library: clasificaciones reales ya asignadas por bibliotecas (Dewey y LCC) */
-  if(isbn&&mode!=='tablas'){
+  if((isbn||val('title'))&&mode!=='tablas'){
    /* Una sola espera con aviso: se consulta todo en paralelo y se muestra junto.
       El contador es honesto: si el motor está despertando, se dice. */
    const usaMotor=(system==='dewey'||system==='udc');
+   const qMotor=new URLSearchParams();
+   if(isbn)qMotor.set('isbn',isbn);
+   else{qMotor.set('titulo',val('title'));if(val('author'))qMotor.set('autor',val('author'));}
    const t0=Date.now();let tictac=null;
    if(!silent){
     const tick=()=>{const s=Math.round((Date.now()-t0)/1000);
-     setStatus('Consultando Open Library'+(usaMotor?' + bibliotecas nacionales (LoC, DNB, BNE, BIBNA 🇺🇾, BNA 🇦🇷)':'')+'… '+s+' s'+
+     setStatus('Consultando '+(isbn?'Open Library'+(usaMotor?' + ':''):'')+(usaMotor?'bibliotecas nacionales (LoC, DNB, BNE, BIBNA 🇺🇾, BNA 🇦🇷)':'')+'… '+s+' s'+
       (usaMotor&&!motorListo&&s>=6?' — primera consulta de la sesión: el motor está despertando (~30 s); las siguientes son inmediatas':''));};
     tick();tictac=setInterval(tick,1000);
    }
-   const [rOL,rMotor]=await Promise.allSettled([fetchOL(isbn),usaMotor?fetchMotor(isbn):Promise.resolve(null)]);
+   const [rOL,rMotor]=await Promise.allSettled([isbn?fetchOL(isbn):Promise.resolve(null),usaMotor?fetchMotor(qMotor.toString()):Promise.resolve(null)]);
    if(tictac)clearInterval(tictac);
    let motorMsg='';
    /* Candidatos del motor: Dewey real con sus bibliotecas de origen */
@@ -530,7 +533,7 @@ async function classify(silent){
      }
      const sysLabel={dewey:'Dewey',lcc:'LCC',udc:'CDU (esta fuente no cubre CDU)'}[system];
      msg=real.length?'Open Library devolvió clasificación real de bibliotecas.':(d._src||'Open Library')+' tiene el registro y cargó los metadatos ('+(system==='udc'?'útiles para las tablas':'sin clasificación '+sysLabel+' asignada')+') — se sugiere desde las tablas.';
-    }else msg=real.length?'':'Open Library no tiene registro para ese ISBN — se sugiere desde las tablas.';
+    }else msg=(!isbn||real.length)?'':'Open Library no tiene registro para ese ISBN — se sugiere desde las tablas.';
     msg+=motorMsg;
    }catch(e){msg=(e&&e.name==='AbortError')?'Open Library no respondió a tiempo (suele saturarse; reintentá en unos segundos) — mientras tanto se sugiere desde las tablas.':'Open Library devolvió un error momentáneo — reintentá en unos segundos; mientras tanto se sugiere desde las tablas.';msg+=motorMsg;}
   }
