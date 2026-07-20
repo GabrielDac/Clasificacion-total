@@ -331,6 +331,7 @@ function renderCandidates(list){
    <span class="cand-code">${esc(c.code)}</span>
    <div class="cand-body"><div class="cand-label">${esc(c.label)}</div>
    ${c.note?`<div class="cand-note">${esc(c.note)}</div>`:''}
+   ${c.origen?`<div class="cand-note">📖 ${esc(c.origen)}</div>`:''}
    <span class="badge">${esc(c.source)}</span></div>
    <button class="btn btn-primary" onclick="pick(${i})">Elegir</button>
   </div>`).join('');
@@ -488,13 +489,13 @@ async function classify(silent){
       if(system==='dewey'){
        const base=c.ddc.replace(/[^0-9.]/g,'').slice(0,3);
        const row=DEWEY.find(e=>e[0]===base)||DEWEY.find(e=>e[0]===base.slice(0,2)+'0')||DEWEY.find(e=>e[0]===base[0]+'00');
-       real.push({code:c.ddc,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),note:c.ddc_edicion?'Edición Dewey '+c.ddc_edicion:(row&&c.ddc.length>3?'Base 3 cifras: '+base:'')});
+       real.push({code:c.ddc,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),origen:[[c.titulo,c.autor].filter(Boolean).join(' — '),[c.editorial,c.anio].filter(Boolean).join(' · ')].filter(Boolean).join(' · '),note:c.ddc_edicion?'Edición Dewey '+c.ddc_edicion:(row&&c.ddc.length>3?'Base 3 cifras: '+base:'')});
       }else{
        /* CDU: el número puede llevar auxiliares como (460) o -31; el rótulo se busca
           por el prefijo numérico más largo que exista en la tabla */
        const puro=c.cdu.replace(/[^0-9.].*$/,'');
        let row=null;for(let L=puro.length;L>=1&&!row;L--){row=UDC.find(e=>e[0]===puro.slice(0,L));}
-       real.push({code:c.cdu,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),note:row&&row[0]!==c.cdu?'Base de tabla: '+row[0]:''});
+       real.push({code:c.cdu,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),origen:[[c.titulo,c.autor].filter(Boolean).join(' — '),[c.editorial,c.anio].filter(Boolean).join(' · ')].filter(Boolean).join(' · '),note:row&&row[0]!==c.cdu?'Base de tabla: '+row[0]:''});
       }
      });
      const c0=cand[0];
