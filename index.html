@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasificación Documental — Dewey · CDU · LCC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0EB; --panel:#FFFFFF; --panel2:#F6F7F3; --ink:#1F2A24; --ink2:#5A685F;
+  --line:#D8DDD3; --accent:#2E5E4E; --accent-ink:#FFFFFF; --brass:#8A6F35;
+  --chip:#E3EAE2; --focus:#2E5E4E; --danger:#8C3B2E; --card-shadow:0 2px 10px rgba(31,42,36,.08);
+  --tejuelo-bg:#FBF8EF; --tejuelo-line:#8A6F35;
+}
+[data-theme="dark"]{
+  --bg:#141D18; --panel:#1C2721; --panel2:#22302A; --ink:#E4E8E2; --ink2:#9AAAA0;
+  --line:#31413A; --accent:#7FBFA4; --accent-ink:#10201A; --brass:#C9A96A;
+  --chip:#2A3A32; --focus:#7FBFA4; --danger:#D98A7B; --card-shadow:0 2px 12px rgba(0,0,0,.35);
+  --tejuelo-bg:#243129; --tejuelo-line:#C9A96A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Source Sans 3',system-ui,sans-serif;font-size:16px;line-height:1.55;transition:background .3s,color .3s}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:8px}
+h1{font-family:'Libre Caslon Text',serif;font-size:clamp(1.7rem,4vw,2.4rem);font-weight:700;letter-spacing:.01em}
+.subtitle{color:var(--ink2);font-size:.98rem;max-width:640px;margin-top:4px}
+.theme-btn{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;font-family:inherit;font-size:.9rem;white-space:nowrap}
+.theme-btn:hover{border-color:var(--accent)}
+.rule{border:0;border-top:2px solid var(--brass);opacity:.5;margin:18px 0 26px}
+/* pasos */
+.step-label{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin-bottom:10px}
+section{margin-bottom:34px}
+/* tabs sistema */
+.tabs{display:flex;gap:10px;flex-wrap:wrap}
+.tab{flex:1;min-width:180px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;color:var(--ink);transition:border .15s}
+.tab .t-name{font-weight:700;font-size:1.02rem}
+.tab .t-desc{font-size:.82rem;color:var(--ink2);margin-top:2px}
+.tab[aria-pressed="true"]{border:2px solid var(--accent);background:var(--panel2)}
+.tab:hover{border-color:var(--accent)}
+/* fuente dewey */
+.source-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:12px 16px}
+.source-row label{display:flex;align-items:center;gap:8px;font-size:.92rem;cursor:pointer}
+.source-row input{accent-color:var(--accent)}
+/* formulario */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--card-shadow)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.field label{display:flex;align-items:center;gap:6px;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.field input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:.95rem;color:var(--ink)}
+.field input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:transparent}
+.help-btn{background:var(--chip);border:none;color:var(--ink);width:19px;height:19px;border-radius:50%;font-size:.72rem;font-weight:700;cursor:pointer;line-height:1}
+.help-btn:hover{background:var(--accent);color:var(--accent-ink)}
+.help-text{display:none;font-size:.82rem;color:var(--ink2);background:var(--panel2);border-left:3px solid var(--brass);padding:8px 10px;border-radius:0 6px 6px 0;margin-top:6px}
+.help-text.open{display:block}
+.help-text b{color:var(--ink)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.btn{border:none;border-radius:8px;padding:11px 20px;font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:wait}
+.status{font-size:.88rem;color:var(--ink2);margin-top:12px;min-height:1.2em}
+.status.err{color:var(--danger)}
+/* candidatos */
+.cands{display:flex;flex-direction:column;gap:12px}
+.cand{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.cand-code{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.15rem;color:var(--accent);min-width:90px}
+.cand-body{flex:1;min-width:220px}
+.cand-label{font-weight:600}
+.cand-note{font-size:.85rem;color:var(--ink2);margin-top:2px}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;background:var(--chip);color:var(--ink2);border-radius:4px;padding:2px 7px;margin-top:6px;margin-right:6px}
+.cand .btn{align-self:center}
+.empty{color:var(--ink2);font-size:.92rem;font-style:italic}
+/* árbol */
+.tree-tools{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.tree-tools input{flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:.95rem;color:var(--ink)}
+.tree{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px}
+details.node{margin:2px 0}
+details.node summary{cursor:pointer;padding:6px 8px;border-radius:6px;font-weight:600;display:flex;gap:10px;align-items:baseline}
+details.node summary:hover{background:var(--panel2)}
+.node-code{font-family:'IBM Plex Mono',monospace;color:var(--brass);min-width:52px;display:inline-block}
+.leaf{display:flex;gap:10px;align-items:baseline;padding:5px 8px 5px 30px;border-radius:6px;cursor:pointer;font-size:.94rem}
+.leaf:hover{background:var(--chip)}
+.leaf .node-code{color:var(--accent)}
+mark{background:var(--brass);color:#fff;border-radius:3px;padding:0 2px}
+/* ficha final */
+.final-grid{display:grid;grid-template-columns:1fr 220px;gap:22px;align-items:start}
+@media (max-width:720px){.final-grid{grid-template-columns:1fr}}
+.ficha{background:var(--tejuelo-bg);border:1px solid var(--line);border-radius:4px;padding:22px 24px;font-family:'IBM Plex Mono',monospace;font-size:.9rem;position:relative;background-image:repeating-linear-gradient(transparent,transparent 27px,var(--line) 27px,var(--line) 28px);line-height:28px}
+.ficha::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--danger);opacity:.55}
+.ficha-row{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.ficha-row .fl{color:var(--ink2);min-width:130px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.ficha input{background:transparent;border:none;border-bottom:1px dotted var(--brass);color:var(--ink);font-family:inherit;font-size:inherit;flex:1;min-width:140px;padding:0 2px}
+.ficha input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.tejuelo{background:var(--tejuelo-bg);border:2px solid var(--tejuelo-line);border-radius:3px;padding:18px 10px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:1.25rem;font-weight:600;letter-spacing:.04em;line-height:1.7;box-shadow:var(--card-shadow)}
+.tejuelo-cap{font-family:'Source Sans 3',sans-serif;font-size:.75rem;font-weight:400;color:var(--ink2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.copy-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+footer{color:var(--ink2);font-size:.8rem;border-top:1px solid var(--line);padding-top:16px;margin-top:20px}
+footer a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Clasificación Documental</h1>
+    <p class="subtitle">Clasificá documentos según Dewey, CDU o Library of Congress a partir de sus datos bibliográficos.</p>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙 Modo oscuro</button>
+</header>
+<hr class="rule">
+
+<!-- PASO 1: SISTEMA -->
+<section>
+  <div class="step-label">Paso 1 — Elegí el sistema de clasificación</div>
+  <div class="tabs" role="group" aria-label="Sistema de clasificación">
+    <button class="tab" id="tab-dewey" aria-pressed="true" onclick="setSystem('dewey')">
+      <div class="t-name">Dewey (CDD)</div>
+      <div class="t-desc">Clasificación Decimal Dewey. Resúmenes oficiales (3 cifras) y/o registros reales vía Open Library.</div>
+    </button>
+    <button class="tab" id="tab-udc" aria-pressed="false" onclick="setSystem('udc')">
+      <div class="t-name">CDU</div>
+      <div class="t-desc">Clasificación Decimal Universal. Subconjunto del UDC Summary (licencia CC) en español.</div>
+    </button>
+    <button class="tab" id="tab-lcc" aria-pressed="false" onclick="setSystem('lcc')">
+      <div class="t-name">Library of Congress</div>
+      <div class="t-desc">Esquema LCC por clases y subclases. También se recupera vía Open Library por ISBN.</div>
+    </button>
+  </div>
+  <div class="source-row" id="deweySources">
+    <strong style="font-size:.88rem">Fuente Dewey:</strong>
+    <label><input type="radio" name="dsrc" value="tablas" > Tablas oficiales (3 cifras)</label>
+    <label><input type="radio" name="dsrc" value="openlibrary"> Open Library por ISBN</label>
+    <label><input type="radio" name="dsrc" value="ambas" checked> Ambas</label>
+  </div>
+</section>
+
+<!-- PASO 2: DATOS -->
+<section>
+  <div class="step-label">Paso 2 — Datos de la publicación</div>
+  <div class="card">
+    <div class="grid" id="formGrid"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btnClasificar" onclick="classify()">Clasificar</button>
+      <button class="btn btn-ghost" onclick="clearForm()">Limpiar</button>
+    </div>
+    <p style="font-size:.82rem;color:var(--ink2);margin-top:12px">Con ISBN se consulta primero Open Library (clasificaciones ya asignadas por bibliotecas reales). Si no hay registro o no tiene clasificación cargada, se sugiere desde las tablas del sistema elegido según título y materias. Una sola clase pertinente pasa directo a la ficha (Paso 4); si el documento admite varias, se abre el paso de desambiguación.</p>
+    <div class="status" id="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- PASO 3: DESAMBIGUACIÓN (solo aparece si hay más de una clase pertinente) -->
+<section id="step3" style="display:none">
+  <div class="step-label">Paso 3 — Desambiguación: el documento admite más de una clase, elegí según tu colección</div>
+  <div class="cands" id="cands"></div>
+</section>
+
+<!-- PASO 4: FICHA -->
+<section>
+  <div class="step-label">Paso 4 — Ficha de clasificación y signatura topográfica</div>
+  <div class="final-grid">
+    <div class="ficha" id="ficha">
+      <div class="ficha-row"><span class="fl">Sistema</span><input id="f_sys" placeholder="—" readonly></div>
+      <div class="ficha-row"><span class="fl">Clasificación</span><input id="f_code" placeholder="—" oninput="updateTejuelo()"></div>
+      <div class="ficha-row"><span class="fl">Rótulo</span><input id="f_label" placeholder="—"></div>
+      <div class="ficha-row"><span class="fl">Notación de autor</span><input id="f_cutter" placeholder="—" oninput="updateTejuelo()"></div>
+      <div class="ficha-row"><span class="fl">Año</span><input id="f_year" placeholder="—" oninput="updateTejuelo()"></div>
+      <div class="ficha-row"><span class="fl">Título</span><input id="f_title" placeholder="—"></div>
+      <div class="ficha-row"><span class="fl">Autor</span><input id="f_author" placeholder="—"></div>
+      <div class="copy-row">
+        <button class="btn btn-primary" onclick="copyFicha()">Copiar ficha</button>
+        <button class="btn btn-ghost" onclick="copySignatura()">Copiar signatura</button>
+      </div>
+    </div>
+    <div>
+      <div class="tejuelo">
+        <div class="tejuelo-cap">Tejuelo</div>
+        <div id="tj1">—</div><div id="tj2">—</div><div id="tj3">—</div>
+      </div>
+      <p style="font-size:.78rem;color:var(--ink2);margin-top:10px">La notación de autor se calcula con la tabla Cutter de LC (aproximación algorítmica). Editá cualquier campo a mano.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ÁRBOL -->
+<section>
+  <div class="step-label">Consultar las tablas — apartado de referencia y aprendizaje</div>
+  <div class="card">
+    <div class="tree-tools">
+      <input type="text" id="treeSearch" placeholder="Buscar en las tablas… ej.: química, música, derecho" oninput="renderTree()">
+    </div>
+    <div class="tree" id="tree"></div>
+  </div>
+</section>
+
+<footer>
+  Fuentes: resúmenes oficiales de la CDD (OCLC, 3 cifras) · subconjunto del <a href="https://udcsummary.info" target="_blank" rel="noopener">UDC Summary</a> (CC BY-SA) · esquema LCC (Library of Congress) · metadatos y clasificaciones reales vía <a href="https://openlibrary.org" target="_blank" rel="noopener">Open Library</a>. Dewey y CDD son marcas de OCLC; esta herramienta solo emplea los resúmenes de acceso público y clasificaciones asignadas por bibliotecas.
+  <br><br>© 2026 Gabriel Da Costa Porto Luzardo · <a href="mailto:gabomvd@gmail.com">gabomvd@gmail.com</a> · <a href="https://referencias-bibliograficas.onrender.com/" target="_blank" rel="noopener">Referencias Bibliográficas</a> · Software libre bajo licencia <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL-3.0</a>.
+</footer>
+</div>
+
+<script>
+/* ============ TEMA ============ */
+let dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme(){document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.getElementById('themeBtn').textContent = dark?'☀️ Modo claro':'🌙 Modo oscuro';}
+function toggleTheme(){dark=!dark;applyTheme();}
+applyTheme();
+
+/* ============ CAMPOS DEL FORMULARIO ============ */
+const FIELDS=[
+ {id:'isbn',label:'ISBN',ph:'Ej.: 9780262533058',help:'<b>MARC 020 $a · RDA: identificador de la manifestación.</b> Número Internacional Normalizado del Libro, con o sin guiones. Es la vía más precisa para recuperar clasificaciones reales desde Open Library.'},
+ {id:'issn',label:'ISSN',ph:'Ej.: 0028-0836',help:'<b>MARC 022 $a · RDA: identificador de la manifestación.</b> Número Internacional Normalizado de Publicaciones Seriadas (revistas, periódicos, anuarios).'},
+ {id:'title',label:'Título',ph:'Ej.: Introducción a la mecánica cuántica',help:'<b>MARC 245 $a · RDA: título propiamente dicho.</b> Transcribilo tal como aparece en la portada (fuente preferida de información). Sus palabras alimentan la búsqueda en las tablas.'},
+ {id:'author',label:'Autor / responsabilidad',ph:'Ej.: Griffiths, David J.',help:'<b>MARC 100 / 245 $c · RDA: punto de acceso del creador.</b> Apellido, Nombre. Se usa para calcular la notación de autor (Cutter) de la signatura.'},
+ {id:'publisher',label:'Editorial',ph:'Ej.: Cambridge University Press',help:'<b>MARC 264 $b · RDA: nombre del editor.</b> Tal como figura en la publicación.'},
+ {id:'year',label:'Año de publicación',ph:'Ej.: 2018',help:'<b>MARC 264 $c · RDA: fecha de publicación.</b> Solo el año; integra la signatura topográfica.'},
+ {id:'edition',label:'Edición',ph:'Ej.: 3.ª ed.',help:'<b>MARC 250 · RDA: mención de edición.</b> Transcribila como aparece (2nd ed., 3.ª ed. rev., etc.).'},
+ {id:'subjects',label:'Materias / palabras clave',ph:'Ej.: física cuántica; mecánica; espectroscopia',help:'<b>MARC 650 · RDA: materia.</b> Separá con punto y coma. Es el campo con más peso al sugerir clasificaciones desde las tablas.'},
+ {id:'lang',label:'Idioma',ph:'Ej.: spa / eng',help:'<b>MARC 041 / 008 · RDA: lengua del contenido.</b> Código ISO 639-2 de tres letras (spa, eng, por, fra…). Relevante en Dewey 400/800 y CDU 8.'},
+];
+const grid=document.getElementById('formGrid');
+grid.innerHTML=FIELDS.map(f=>`<div class="field">
+ <label for="in_${f.id}">${f.label} <button type="button" class="help-btn" aria-label="Ayuda sobre ${f.label}" onclick="this.closest('.field').querySelector('.help-text').classList.toggle('open')">?</button></label>
+ <input id="in_${f.id}" placeholder="${f.ph}" autocomplete="off">
+ <div class="help-text">${f.help}</div>
+</div>`).join('');
+const val=id=>document.getElementById('in_'+id).value.trim();
+const setVal=(id,v)=>{const el=document.getElementById('in_'+id);if(v&&!el.value.trim())el.value=v;}; /* solo completa campos vacíos: respeta lo escrito por el usuario */
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============ TABLAS EMBEBIDAS ============ */
+/* Dewey: 10 clases + 100 divisiones (resúmenes de acceso público, rótulos en español). k = palabras clave extra */
+const DEWEY=[
+["000","Ciencias de la computación, información y obras generales","informática software programación internet"],["010","Bibliografías",""],["020","Bibliotecología y ciencias de la información","bibliotecas catalogación"],["030","Enciclopedias y libros de datos",""],["040","(No asignada)",""],["050","Publicaciones seriadas generales","revistas"],["060","Organizaciones generales y museología","museos"],["070","Medios de comunicación, periodismo y publicación","prensa noticias"],["080","Colecciones generales","citas"],["090","Manuscritos y libros raros",""],
+["100","Filosofía y psicología",""],["110","Metafísica",""],["120","Epistemología","conocimiento causalidad"],["130","Parapsicología y ocultismo","astrología"],["140","Escuelas filosóficas específicas",""],["150","Psicología","conducta percepción emociones"],["160","Lógica filosófica",""],["170","Ética","moral"],["180","Filosofía antigua, medieval y oriental",""],["190","Filosofía moderna occidental",""],
+["200","Religión",""],["210","Filosofía y teoría de la religión",""],["220","La Biblia",""],["230","Cristianismo y teología cristiana",""],["240","Moral cristiana y teología devocional","oración"],["250","Órdenes cristianas e iglesia local",""],["260","Teología social y eclesiástica",""],["270","Historia del cristianismo",""],["280","Denominaciones cristianas",""],["290","Otras religiones","islam budismo judaísmo hinduismo mitología"],
+["300","Ciencias sociales, sociología y antropología","sociedad"],["310","Estadísticas generales","demografía censos"],["320","Ciencia política","gobierno estado"],["330","Economía","finanzas trabajo mercado"],["340","Derecho","leyes jurídico legislación"],["350","Administración pública y ciencia militar","ejército"],["360","Problemas y servicios sociales","criminología seguros asociaciones"],["370","Educación","pedagogía enseñanza escuela didáctica"],["380","Comercio, comunicaciones y transporte",""],["390","Costumbres, etiqueta y folclore","tradiciones"],
+["400","Lenguas","idiomas lenguaje"],["410","Lingüística","gramática fonética"],["420","Inglés e inglés antiguo",""],["430","Alemán y lenguas germánicas",""],["440","Francés y lenguas romances afines",""],["450","Italiano, rumano y afines",""],["460","Español, portugués y gallego","castellano"],["470","Latín y lenguas itálicas",""],["480","Griego clásico y lenguas helénicas",""],["490","Otras lenguas",""],
+["500","Ciencias naturales y matemáticas","ciencia"],["510","Matemáticas","álgebra geometría cálculo aritmética"],["520","Astronomía y ciencias afines","astros planetas cosmología"],["530","Física","mecánica óptica termodinámica cuántica electricidad magnetismo"],["540","Química y ciencias afines","orgánica inorgánica analítica cristalografía"],["550","Ciencias de la Tierra","geología meteorología oceanografía"],["560","Paleontología","fósiles dinosaurios"],["570","Biología y ciencias de la vida","genética ecología microbiología bioquímica"],["580","Plantas","botánica"],["590","Animales","zoología"],
+["600","Tecnología y ciencias aplicadas",""],["610","Medicina y salud","anatomía enfermería farmacología enfermedades"],["620","Ingeniería y operaciones afines","mecánica civil eléctrica electrónica"],["630","Agricultura y tecnologías relacionadas","ganadería veterinaria cultivos"],["640","Economía doméstica y vida familiar","cocina gastronomía hogar"],["650","Gestión y servicios auxiliares","administración empresas contabilidad marketing"],["660","Ingeniería química y tecnologías afines","química industrial biotecnología alimentos"],["670","Manufactura",""],["680","Manufactura de productos para usos específicos",""],["690","Construcción de edificios","albañilería"],
+["700","Artes","arte estética"],["710","Urbanismo y arte del paisaje","paisajismo"],["720","Arquitectura",""],["730","Escultura, cerámica y metalistería",""],["740","Artes gráficas y decorativas","dibujo diseño ilustración"],["750","Pintura y pinturas","pintores"],["760","Grabado y estampas",""],["770","Fotografía y fotografías",""],["780","Música","instrumentos canto partituras"],["790","Deportes, juegos y entretenimiento","fútbol cine recreación videojuegos"],
+["800","Literatura y retórica",""],["810","Literatura estadounidense en inglés",""],["820","Literatura inglesa e inglesa antigua",""],["830","Literatura alemana y germánicas",""],["840","Literatura francesa y romances afines",""],["850","Literatura italiana, rumana y afines",""],["860","Literaturas española y portuguesa","hispanoamericana novela poesía cuento"],["870","Literatura latina",""],["880","Literatura griega clásica",""],["890","Literaturas de otras lenguas",""],
+["900","Historia y geografía",""],["910","Geografía y viajes","atlas mapas turismo"],["920","Biografía y genealogía","biografías"],["930","Historia del mundo antiguo","arqueología roma grecia egipto"],["940","Historia de Europa",""],["950","Historia de Asia","oriente"],["960","Historia de África",""],["970","Historia de América del Norte",""],["980","Historia de América del Sur","uruguay argentina brasil latinoamérica latina latinoamericana"],["990","Historia de otras áreas","oceanía"]
+];
+/* CDU: subconjunto del UDC Summary en español */
+const UDC=[
+["0","Ciencia y conocimiento. Organización. Información. Documentación",""],["001","Ciencia y conocimiento en general","investigación"],["004","Ciencia y tecnología de los ordenadores. Informática","computación software programación internet datos"],["005","Gestión. Administración","empresas organización"],["006","Normalización","normas estándares"],["008","Civilización. Cultura. Progreso",""],["01","Bibliografía y bibliografías. Catálogos",""],["02","Biblioteconomía","bibliotecas catalogación"],["030","Obras de referencia generales. Enciclopedias",""],["050","Publicaciones seriadas. Revistas",""],["06","Organizaciones y colectividades. Museos","museología"],["070","Periódicos. Prensa. Periodismo","noticias"],["09","Manuscritos. Libros raros y notables",""],
+["1","Filosofía. Psicología",""],["11","Metafísica",""],["13","Filosofía de la mente y del espíritu","ocultismo"],["14","Sistemas y puntos de vista filosóficos",""],["159.9","Psicología","conducta percepción emociones"],["16","Lógica. Epistemología. Teoría del conocimiento",""],["17","Ética. Filosofía moral","moral"],
+["2","Religión. Teología",""],["24","Budismo",""],["26","Judaísmo",""],["27","Cristianismo. Iglesias cristianas","biblia teología"],["28","Islam","musulmán"],["29","Movimientos espirituales modernos","mitología"],
+["3","Ciencias sociales","sociedad"],["311","Estadística como ciencia","estadísticas"],["314","Demografía. Población","censos migración"],["316","Sociología",""],["32","Política","gobierno estado"],["33","Economía. Ciencia económica","finanzas trabajo mercado"],["34","Derecho. Jurisprudencia","leyes legislación jurídico"],["35","Administración pública. Arte militar","ejército"],["36","Bienestar y necesidades sociales","servicios sociales seguros"],["37","Educación. Enseñanza","pedagogía escuela didáctica"],["39","Etnología. Etnografía. Usos y costumbres. Folclore","tradiciones"],
+["5","Matemáticas. Ciencias naturales","ciencia"],["502/504","Ciencia del medio ambiente","ecología contaminación"],["51","Matemáticas","álgebra geometría cálculo"],["52","Astronomía. Astrofísica. Geodesia","astros planetas cosmología"],["53","Física","mecánica óptica termodinámica cuántica electricidad magnetismo"],["54","Química. Cristalografía. Mineralogía","orgánica inorgánica analítica"],["55","Ciencias de la Tierra. Geología","meteorología"],["56","Paleontología","fósiles"],["57","Ciencias biológicas. Biología","genética microbiología bioquímica"],["58","Botánica","plantas"],["59","Zoología","animales"],
+["6","Ciencias aplicadas. Medicina. Tecnología",""],["61","Medicina. Salud","anatomía enfermería farmacología enfermedades"],["62","Ingeniería. Tecnología en general","mecánica civil eléctrica electrónica"],["63","Agricultura. Silvicultura. Ganadería. Caza. Pesca","cultivos veterinaria"],["64","Economía doméstica. Ciencia del hogar","cocina gastronomía"],["654","Telecomunicaciones",""],["655","Industrias gráficas. Imprenta. Editoriales",""],["657","Contabilidad",""],["658","Gestión de empresas","administración marketing"],["66","Tecnología química. Industrias químicas","biotecnología alimentos"],["69","Industria de la construcción","edificios albañilería"],
+["7","Bellas artes. Juegos. Espectáculos. Deportes","arte"],["71","Urbanismo. Paisajismo",""],["72","Arquitectura",""],["73","Artes plásticas. Escultura","cerámica"],["74","Dibujo. Diseño. Artes aplicadas","ilustración"],["75","Pintura","pintores"],["76","Artes gráficas. Grabado",""],["77","Fotografía",""],["78","Música","instrumentos canto partituras"],["79","Diversiones. Espectáculos. Cine. Deportes","fútbol juegos videojuegos"],
+["8","Lengua. Lingüística. Literatura","idiomas"],["81","Lingüística y lenguas","gramática fonética español inglés"],["82","Literatura","novela poesía cuento teatro narrativa"],
+["9","Geografía. Biografías. Historia",""],["902","Arqueología",""],["91","Geografía. Exploración. Viajes","atlas mapas turismo"],["929","Biografías. Genealogía. Heráldica",""],["93/94","Historia","historia antigua medieval moderna"]
+];
+/* LCC: clases y subclases frecuentes */
+const LCC=[
+["A","Obras generales","enciclopedias"],["B","Filosofía. Psicología. Religión",""],["BF","Psicología","conducta emociones"],["BJ","Ética","moral"],["BL","Religiones. Mitología",""],["BS","La Biblia",""],["C","Ciencias auxiliares de la historia","arqueología genealogía"],["D","Historia: general y del Viejo Mundo","europa asia áfrica"],["E","Historia: América (general) y Estados Unidos",""],["F","Historia: América local y latinoamericana","uruguay argentina brasil latina latinoamerica"],
+["G","Geografía. Antropología. Recreación","mapas atlas"],["GV","Recreación. Deportes. Juegos","fútbol videojuegos"],["H","Ciencias sociales (general)","sociedad"],["HA","Estadística","demografía"],["HB","Teoría económica","economía"],["HD","Industrias. Trabajo. Uso de la tierra","empresas gestión"],["HF","Comercio","marketing contabilidad"],["HM","Sociología",""],["HQ","Familia. Matrimonio. Mujer","género"],["HV","Patología social. Bienestar. Criminología","servicios sociales"],
+["J","Ciencia política","gobierno estado"],["K","Derecho","leyes legislación jurídico"],["L","Educación","pedagogía escuela"],["LB","Teoría y práctica de la educación","didáctica enseñanza"],["M","Música","partituras instrumentos"],["N","Bellas artes","arte"],["NA","Arquitectura",""],["NB","Escultura",""],["NC","Dibujo. Diseño. Ilustración",""],["ND","Pintura","pintores"],
+["P","Lengua y literatura","idiomas lingüística"],["PA","Filología y literatura clásicas","griego latín"],["PC","Lenguas romances","español francés italiano portugués"],["PN","Literatura (general). Periodismo. Cine","teatro"],["PQ","Literaturas francesa, italiana, española y portuguesa","hispanoamericana novela poesía cuento"],["PR","Literatura inglesa",""],["PS","Literatura estadounidense",""],["PZ","Literatura infantil y juvenil","cuentos niños"],
+["Q","Ciencia (general)","ciencias"],["QA","Matemáticas. Informática","álgebra geometría cálculo computación programación software"],["QB","Astronomía","astros planetas cosmología"],["QC","Física","mecánica óptica termodinámica cuántica electricidad magnetismo"],["QD","Química","orgánica inorgánica analítica cristalografía"],["QE","Geología","fósiles paleontología"],["QH","Historia natural. Biología","genética ecología"],["QK","Botánica","plantas"],["QL","Zoología","animales"],["QP","Fisiología","bioquímica"],["QR","Microbiología","bacterias virus"],
+["R","Medicina (general)","salud enfermedades"],["RC","Medicina interna","psiquiatría"],["RJ","Pediatría",""],["RM","Farmacología. Terapéutica","medicamentos"],["RT","Enfermería",""],["S","Agricultura","cultivos ganadería"],["SF","Zootecnia. Veterinaria",""],["T","Tecnología (general)",""],["TA","Ingeniería (general). Ingeniería civil",""],["TD","Tecnología ambiental. Ingeniería sanitaria","contaminación"],["TJ","Ingeniería mecánica",""],["TK","Ingeniería eléctrica. Electrónica. Telecomunicaciones","computadoras redes"],["TP","Tecnología química","alimentos biotecnología"],["TX","Economía doméstica","cocina gastronomía"],
+["U","Ciencia militar","ejército"],["V","Ciencia naval","marina"],["Z","Bibliografía. Biblioteconomía. Recursos de información","bibliotecas catalogación"]
+];
+const SYS={
+ dewey:{name:'Dewey (CDD)',data:DEWEY,src:'Tablas oficiales CDD (resúmenes)'},
+ udc:{name:'CDU',data:UDC,src:'UDC Summary (subconjunto)'},
+ lcc:{name:'Library of Congress',data:LCC,src:'Esquema LCC'}
+};
+let system='dewey';
+function setSystem(s){system=s;['dewey','udc','lcc'].forEach(k=>document.getElementById('tab-'+k).setAttribute('aria-pressed',k===s));
+ document.getElementById('deweySources').style.display = s==='dewey'?'flex':'none';
+ renderTree();
+ if(val('title')||val('subjects')||val('isbn')) classify(true); /* reclasifica con los mismos datos al cambiar de sistema */
+}
+
+/* ============ BÚSQUEDA EN TABLAS ============ */
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+/* Materias frecuentes en inglés (Open Library las devuelve así) → equivalentes en español */
+const TR={fiction:'novela literatura narrativa',novel:'novela literatura',novels:'novela literatura',literature:'literatura',stories:'cuento',history:'historia',historical:'historia',poetry:'poesia literatura',drama:'teatro literatura',spanish:'espanola espanol',science:'ciencia',physics:'fisica',chemistry:'quimica',mathematics:'matematicas',biology:'biologia',medicine:'medicina',health:'salud',nursing:'enfermeria',law:'derecho',education:'educacion',teaching:'ensenanza',music:'musica',painting:'pintura',philosophy:'filosofia',psychology:'psicologia',religion:'religion',economics:'economia',business:'empresas gestion',management:'gestion administracion',politics:'politica ciencia',political:'politica',geography:'geografia',travel:'viajes',architecture:'arquitectura',photography:'fotografia',cooking:'cocina',cookery:'cocina',sports:'deportes',computers:'informatica computacion',computer:'informatica computacion',software:'informatica programacion',engineering:'ingenieria',agriculture:'agricultura',astronomy:'astronomia',geology:'geologia',sociology:'sociologia',linguistics:'linguistica',language:'lengua idiomas',biography:'biografias',juvenile:'infantil juvenil'};
+const STOP=new Set(['the','and','del','los','las','una','uno','unos','para','con','por','que','sobre','desde','entre','general','ficcion','translations','into','from','literary','misc','miscellanea','aspects','study','studies','20th','21st','century','textbooks','introduction','introduccion','manual','curso','tratado','elementos','teoria']);
+function tokensFrom(txt){
+ let t=norm(txt||'').split(/[^a-z0-9]+/).filter(w=>w.length>3&&!STOP.has(w));
+ const ex=[];t.forEach(w=>{if(TR[w])ex.push(...TR[w].split(' '));});
+ return [...new Set([...t,...ex])];
+}
+/* Coincidencia estricta: solo al inicio de palabra, con más peso para Materias que para Título.
+   Ponderación por frecuencia inversa: una palabra que aparece en muchas clases (ej. "literatura")
+   pesa menos que una distintiva (ej. "policial", "quimica") — evita traer clases hermanas irrelevantes.
+   Umbral mínimo + poda de la cola: solo quedan las clases realmente pertinentes. */
+function tableCandidates(title,subjects,max=5){
+ const tT=tokensFrom(title),tS=tokensFrom(subjects);
+ const allWords=[...new Set([...tT,...tS])];
+ if(!allWords.length)return[];
+ const N=SYS[system].data.length;
+ const df={};allWords.forEach(w=>{
+  const re=new RegExp('(^|[^a-z0-9])'+w);
+  df[w]=SYS[system].data.filter(e=>re.test(' '+norm(e[1]+' '+(e[2]||''))+' ')).length||1;
+ });
+ const idf=w=>Math.max(0.35, Math.log(1+N/df[w])/Math.log(1+N));
+ let res=SYS[system].data.map(e=>{
+  const hay=' '+norm(e[1]+' '+(e[2]||''))+' ';
+  let sc=0;const hits=[];
+  const test=(w,peso)=>{if(new RegExp('(^|[^a-z0-9])'+w).test(hay)){sc+=peso*w.length*idf(w);hits.push(w);}};
+  tS.forEach(w=>test(w,3)); tT.forEach(w=>test(w,2));
+  return{e,sc,hits};
+ }).filter(x=>x.sc>=6).sort((a,b)=>b.sc-a.sc);
+ if(res.length){const top=res[0].sc;res=res.filter(x=>x.sc>=top*0.6);}
+ /* De lo general a lo particular: si entre los candidatos hay una clase específica,
+    se descarta su clase madre (ej.: CDU "93/94 Historia" descarta "9 Historia...";
+    Dewey "530 Física" descarta la centena "500 Ciencias naturales"). */
+ res=res.filter(a=>!res.some(b=>b!==a&&(
+   b.e[0].startsWith(a.e[0])||
+   (a.e[0].endsWith('00')&&b.e[0][0]===a.e[0][0])
+ )));
+ return res.slice(0,max).map(x=>({code:x.e[0],label:x.e[1],source:SYS[system].src,note:'Coincidencia: '+[...new Set(x.hits)].join(', ')}));
+}
+
+/* ============ DESAMBIGUACIÓN (Paso 3, solo si hay varias clases) ============ */
+let lastCandidates=[];
+function renderCandidates(list){
+ lastCandidates=list;
+ const sec=document.getElementById('step3'),box=document.getElementById('cands');
+ if(list.length<2){sec.style.display='none';box.innerHTML='';return;}
+ sec.style.display='block';
+ box.innerHTML=list.map((c,i)=>`<div class="cand">
+   <span class="cand-code">${esc(c.code)}</span>
+   <div class="cand-body"><div class="cand-label">${esc(c.label)}</div>
+   ${c.note?`<div class="cand-note">${esc(c.note)}</div>`:''}
+   <span class="badge">${esc(c.source)}</span></div>
+   <button class="btn btn-primary" onclick="pick(${i})">Elegir</button>
+  </div>`).join('');
+ sec.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function pick(i){
+ const c=lastCandidates[i];
+ if(!c)return; /* defensa: nunca cargar una ficha sin candidato */
+ document.getElementById('f_sys').value=SYS[system].name;
+ document.getElementById('f_code').value=c.code;
+ document.getElementById('f_label').value=c.label;
+ document.getElementById('f_title').value=val('title');
+ document.getElementById('f_author').value=val('author');
+ document.getElementById('f_year').value=(val('year').match(/\d{4}/)||[''])[0];
+ document.getElementById('f_cutter').value=cutter(val('author'),val('title'));
+ document.getElementById('step3').style.display='none';
+ updateTejuelo();
+ document.getElementById('ficha').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ============ CLASIFICAR (flujo principal) ============ */
+let cacheIsbn='',cacheData=null;
+/* ============ MOTOR DE BIBLIOTECAS (Recuperación Dewey, servicio propio) ============
+   Consulta por SRU la Library of Congress y la Bibl. Nacional Alemana (campo MARC 082).
+   El plan gratuito de Render duerme el motor tras ~15 min sin uso: la PRIMERA consulta
+   de la sesión puede demorar ~30 s mientras despierta; las siguientes son inmediatas.
+   Por eso, al abrir la página se le da un toque para que arranque de fondo. */
+const MOTOR='';  /* mismo servidor: la página y el motor ahora viven juntos */
+let motorListo=false;
+function despertarMotor(){fetch(MOTOR+'/api/ping').then(()=>{motorListo=true;}).catch(()=>{});}
+document.addEventListener('DOMContentLoaded',()=>{
+ motorListo=true;            /* si la página cargó, el servidor ya está despierto */
+ despertarMotor();           /* toque inicial */
+ setInterval(despertarMotor,10*60*1000); /* y cada 10 min: mientras haya una pestaña abierta, no se duerme */
+});
+async function fetchMotor(isbn){
+ const ctrl=new AbortController();
+ const timer=setTimeout(()=>ctrl.abort(),110000); /* margen amplio: puede estar despertando */
+ try{
+  const r=await fetch(MOTOR+'/api/dewey?isbn='+isbn,{signal:ctrl.signal});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  motorListo=true;
+  return await r.json();
+ }finally{clearTimeout(timer);}
+}
+async function getJSON(url,ctrl){
+ const r=await fetch(url,{signal:ctrl.signal});
+ if(!r.ok)throw new Error('HTTP '+r.status); /* error del servidor ≠ "el ISBN no existe" */
+ return r.json();
+}
+function isbnVariantes(isbn){
+ /* Muchos catálogos indexan el libro solo bajo una de las dos formas (10 o 13):
+    probando ambas se recuperan registros que con una sola no aparecen. */
+ const v=[isbn];
+ try{
+  if(isbn.length===13&&isbn.startsWith('978')){
+   const nucleo=isbn.slice(3,12);let s=0;
+   for(let i=0;i<9;i++)s+=(10-i)*(+nucleo[i]);
+   const c=(11-s%11)%11;v.push(nucleo+(c===10?'X':''+c));
+  }else if(isbn.length===10){
+   const nucleo='978'+isbn.slice(0,9);let s=0;
+   for(let i=0;i<12;i++)s+=(i%2?3:1)*(+nucleo[i]);
+   v.push(nucleo+((10-s%10)%10));
+  }
+ }catch(e){}
+ return v;
+}
+async function fetchOL(isbn){
+ if(isbn===cacheIsbn&&cacheData)return cacheData; /* solo se cachean aciertos: un fallo transitorio no queda pegado */
+ const ctrl=new AbortController();
+ const timer=setTimeout(()=>ctrl.abort(),12000); /* corta la espera a los 12s si Open Library no responde */
+ try{
+  /* Cada fuente es independiente: si una falla, se intenta la siguiente igual */
+  let d=null;
+  const isbns=isbnVariantes(isbn);
+  /* 1) Open Library, registro de la edición exacta (ambas formas del ISBN de una vez) */
+  try{
+   const claves=isbns.map(x=>'ISBN:'+x).join(',');
+   const j=await getJSON(`https://openlibrary.org/api/books?bibkeys=${claves}&format=json&jscmd=data`,ctrl);
+   for(const x of isbns){if(j['ISBN:'+x]){d=j['ISBN:'+x];break;}}
+  }catch(e){}
+  /* 2) Respaldo: Search API por ISBN — algunos registros solo responden por acá,
+        y además devuelve las clasificaciones ddc/lcc de la obra */
+  if(!d)try{
+   const s=await getJSON(`https://openlibrary.org/search.json?isbn=${isbns.join(' OR ')}&fields=title,subtitle,author_name,publisher,first_publish_year,subject,ddc,lcc&limit=1`,ctrl);
+   const doc=s&&s.docs&&s.docs[0];
+   if(doc){
+    d={title:doc.title||'',subtitle:doc.subtitle,
+       authors:(doc.author_name||[]).map(n=>({name:n})),
+       publishers:(doc.publisher||[]).slice(0,2).map(n=>({name:n})),
+       publish_date:doc.first_publish_year?String(doc.first_publish_year):'',
+       subjects:(doc.subject||[]).slice(0,8).map(n=>({name:n})),
+       classifications:{
+        dewey_decimal_class:(doc.ddc&&doc.ddc.length)?doc.ddc:undefined,
+        lc_classifications:(doc.lcc&&doc.lcc.length)?doc.lcc:undefined
+       }};
+   }
+  }catch(e){}
+  /* 3) Respaldo final: Google Books — excelente cobertura de ediciones comerciales
+        latinoamericanas recientes que Open Library no tiene. No trae Dewey/LCC,
+        pero completa los metadatos y materias para que clasifiquen las tablas. */
+  if(!d)try{
+   const g=await getJSON(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbns.join(' OR isbn:')}&maxResults=1`,ctrl);
+   const v=g&&g.items&&g.items[0]&&g.items[0].volumeInfo;
+   if(v){
+    d={title:v.title||'',subtitle:v.subtitle,
+       authors:(v.authors||[]).map(n=>({name:n})),
+       publishers:v.publisher?[{name:v.publisher}]:[],
+       publish_date:v.publishedDate||'',
+       subjects:(v.categories||[]).slice(0,8).map(n=>({name:n})),
+       classifications:{},_src:'Google Books'};
+   }
+  }catch(e){}
+  if(d){cacheIsbn=isbn;cacheData=d;}
+  return d;
+ }finally{clearTimeout(timer);}
+}
+async function classify(silent){
+ const isbnRaw=val('isbn').replace(/[-\s]/g,'');
+ const isbnOk=/^(\d{9}[\dXx]|\d{13})$/.test(isbnRaw);
+ const isbn=isbnOk?isbnRaw:'';
+ const modeRadio=document.querySelector('input[name="dsrc"]:checked');
+ const mode=system==='dewey'?(modeRadio?modeRadio.value:'ambas'):'auto';
+ if(isbnRaw&&!isbnOk){setStatus('El ISBN debe tener 10 o 13 dígitos (verificá el número). Podés clasificarlo igual completando Título y Materias.',true);if(!val('title')&&!val('subjects'))return;}
+ if(!isbn&&!val('title')&&!val('subjects')){setStatus('Ingresá un ISBN, o al menos Título y Materias, para clasificar.',true);return;}
+ if(!isbn&&mode==='openlibrary'){setStatus('Elegiste como fuente "Open Library por ISBN" pero no hay un ISBN válido: cargalo, o cambiá la fuente a "Tablas oficiales" o "Ambas".',true);return;}
+ const btn=document.getElementById('btnClasificar');
+ btn.disabled=true;
+ try{
+  let real=[],msg='';
+  /* 1) Open Library: clasificaciones reales ya asignadas por bibliotecas (Dewey y LCC) */
+  if(isbn&&mode!=='tablas'){
+   /* Una sola espera con aviso: se consulta todo en paralelo y se muestra junto.
+      El contador es honesto: si el motor está despertando, se dice. */
+   const usaMotor=(system==='dewey'||system==='udc');
+   const t0=Date.now();let tictac=null;
+   if(!silent){
+    const tick=()=>{const s=Math.round((Date.now()-t0)/1000);
+     setStatus('Consultando Open Library'+(usaMotor?' + bibliotecas nacionales (LoC, DNB, BNE, BIBNA 🇺🇾, BNA 🇦🇷)':'')+'… '+s+' s'+
+      (usaMotor&&!motorListo&&s>=6?' — primera consulta de la sesión: el motor está despertando (~30 s); las siguientes son inmediatas':''));};
+    tick();tictac=setInterval(tick,1000);
+   }
+   const [rOL,rMotor]=await Promise.allSettled([fetchOL(isbn),usaMotor?fetchMotor(isbn):Promise.resolve(null)]);
+   if(tictac)clearInterval(tictac);
+   let motorMsg='';
+   /* Candidatos del motor: Dewey real con sus bibliotecas de origen */
+   if(usaMotor){
+    if(rMotor.status==='fulfilled'&&rMotor.value&&(rMotor.value.candidatos||rMotor.value.candidatos_cdu)){
+     const m=rMotor.value;
+     const cand=(system==='dewey')?(m.candidatos||[]):(m.candidatos_cdu||[]);
+     cand.forEach(c=>{
+      if(system==='dewey'){
+       const base=c.ddc.replace(/[^0-9.]/g,'').slice(0,3);
+       const row=DEWEY.find(e=>e[0]===base)||DEWEY.find(e=>e[0]===base.slice(0,2)+'0')||DEWEY.find(e=>e[0]===base[0]+'00');
+       real.push({code:c.ddc,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),note:c.ddc_edicion?'Edición Dewey '+c.ddc_edicion:(row&&c.ddc.length>3?'Base 3 cifras: '+base:'')});
+      }else{
+       /* CDU: el número puede llevar auxiliares como (460) o -31; el rótulo se busca
+          por el prefijo numérico más largo que exista en la tabla */
+       const puro=c.cdu.replace(/[^0-9.].*$/,'');
+       let row=null;for(let L=puro.length;L>=1&&!row;L--){row=UDC.find(e=>e[0]===puro.slice(0,L));}
+       real.push({code:c.cdu,label:row?row[1]:'—',source:c.fuentes.join(' + ')+(c.via==='obra'?' — otra edición de la obra':' (registro real)'),note:row&&row[0]!==c.cdu?'Base de tabla: '+row[0]:''});
+      }
+     });
+     const c0=cand[0];
+     if(c0){if(!val('title')&&c0.titulo)setVal('title',c0.titulo);
+      if(!val('author')&&c0.autor)setVal('author',c0.autor);
+      if(!val('year')&&c0.anio)setVal('year',c0.anio);
+      if(!val('publisher')&&c0.editorial)setVal('publisher',c0.editorial);}
+     const ok=(m.fuentes||[]).filter(f=>f.estado==='ok').map(f=>f.sigla).join(', ');
+     motorMsg=cand.length?' Bibliotecas nacionales ('+(ok||'motor')+'): '+cand.length+' número(s) '+(system==='dewey'?'Dewey':'CDU')+' real(es).':'';
+     if(m.obra&&m.obra.titulo)motorMsg+=' Obra consultada: «'+m.obra.titulo+'»'+(m.obra.autor?' ('+m.obra.autor+')':'')+'.';
+    }else if(rMotor.status==='rejected'){motorMsg=' El motor de bibliotecas no respondió esta vez (reintentá: si estaba dormido, ya despertó).';}
+   }
+   try{
+    const d=(rOL.status==='fulfilled')?rOL.value:null;
+    if(rOL.status==='rejected')throw rOL.reason;
+    if(d){
+     setVal('title',d.title+(d.subtitle?': '+d.subtitle:''));
+     if(d.authors)setVal('author',d.authors.map(a=>a.name).join('; '));
+     if(d.publishers)setVal('publisher',d.publishers.map(p=>p.name).join('; '));
+     if(d.publish_date)setVal('year',(d.publish_date.match(/\d{4}/)||[d.publish_date])[0]);
+     if(d.subjects&&!val('subjects'))setVal('subjects',d.subjects.slice(0,8).map(s=>s.name).join('; '));
+     const cl=d.classifications||{};
+     if(system==='dewey'&&cl.dewey_decimal_class){
+      [...new Set(cl.dewey_decimal_class)].forEach(code=>{
+       const base=code.replace(/[^0-9.]/g,'').slice(0,3);
+       const row=DEWEY.find(e=>e[0]===base)||DEWEY.find(e=>e[0]===base.slice(0,2)+'0')||DEWEY.find(e=>e[0]===base[0]+'00');
+       real.push({code,label:row?row[1]:'—',source:'Open Library (asignada por bibliotecas)',note:row&&code.length>3?'Número completo; base 3 cifras: '+base:''});
+      });
+     }
+     if(system==='lcc'&&cl.lc_classifications){
+      [...new Set(cl.lc_classifications)].forEach(code=>{
+       const letters=(code.match(/^[A-Z]{1,3}/)||[''])[0];
+       const row=LCC.find(e=>e[0]===letters)||LCC.find(e=>e[0]===letters[0]);
+       real.push({code,label:row?row[1]:'—',source:'Open Library (asignada por bibliotecas)',note:row?'Clase '+row[0]+': '+row[1]:''});
+      });
+     }
+     const sysLabel={dewey:'Dewey',lcc:'LCC',udc:'CDU (esta fuente no cubre CDU)'}[system];
+     msg=real.length?'Open Library devolvió clasificación real de bibliotecas.':(d._src||'Open Library')+' tiene el registro y cargó los metadatos ('+(system==='udc'?'útiles para las tablas':'sin clasificación '+sysLabel+' asignada')+') — se sugiere desde las tablas.';
+    }else msg=real.length?'':'Open Library no tiene registro para ese ISBN — se sugiere desde las tablas.';
+    msg+=motorMsg;
+   }catch(e){msg=(e&&e.name==='AbortError')?'Open Library no respondió a tiempo (suele saturarse; reintentá en unos segundos) — mientras tanto se sugiere desde las tablas.':'Open Library devolvió un error momentáneo — reintentá en unos segundos; mientras tanto se sugiere desde las tablas.';msg+=motorMsg;}
+  }
+  /* 2) Si no hubo clasificación real (o el modo es solo tablas), sugerencia estricta desde las tablas */
+  let list=real;
+  if(!list.length&&mode!=='openlibrary'){
+   list=tableCandidates(val('title'),val('subjects'));
+  }
+  /* dedupe por código */
+  const seen=new Set();list=list.filter(c=>!seen.has(c.code)&&seen.add(c.code));
+  /* 3) Resolución: 0 → aviso · 1 → directo a la ficha · varias → desambiguación */
+  if(!list.length){
+   renderCandidates([]);
+   setStatus(msg+' Sin clase pertinente para esos términos: agregá materias temáticas (ej.: "novela; literatura española") y volvé a clasificar, o consultá las tablas más abajo.',true);
+  }else if(list.length===1){
+   renderCandidates([]);      /* primero oculta el Paso 3 (esto reinicia la lista interna) */
+   lastCandidates=list;       /* recién después se asigna el candidato */
+   pick(0);
+   setStatus(msg+' Una sola clase pertinente ('+list[0].code+' — '+list[0].label+'): cargada directo en la ficha del Paso 4.');
+  }else{
+   renderCandidates(list);
+   setStatus(msg+' El documento admite '+list.length+' clases: elegí en el Paso 3 según el criterio de tu colección.');
+  }
+ }catch(e){
+  setStatus('Ocurrió un error inesperado al clasificar. Probá de nuevo; si persiste, cargá los datos manualmente y usá el árbol de tablas.',true);
+  console.error(e);
+ }finally{
+  btn.disabled=false; /* el botón se reactiva siempre, incluso si algo falló arriba */
+ }
+}
+function setStatus(msg,err){const s=document.getElementById('status');s.textContent=msg;s.className='status'+(err?' err':'');}
+
+/* ============ ÁRBOL ============ */
+function groupKey(code){
+ if(system==='dewey')return code[0]+'00';
+ if(system==='udc')return code[0];
+ return code[0];
+}
+function renderTree(){
+ const q=norm(document.getElementById('treeSearch').value.trim());
+ const data=SYS[system].data;
+ const groups={};
+ data.forEach(e=>{const k=groupKey(e[0]);(groups[k]=groups[k]||[]).push(e);});
+ const hl=t=>{if(!q)return t;const i=norm(t).indexOf(q);return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);};
+ let html='';
+ Object.keys(groups).sort().forEach(k=>{
+  const head=groups[k].find(e=>e[0]===k)||groups[k][0];
+  const children=groups[k].filter(e=>e!==head);
+  const match=e=>!q||norm(e[0]+' '+e[1]+' '+(e[2]||'')).includes(q);
+  const kids=children.filter(match);
+  const headMatch=match(head);
+  if(q&&!headMatch&&!kids.length)return;
+  html+=`<details class="node" ${q?'open':''}><summary><span class="node-code">${head[0]}</span> ${hl(head[1])}</summary>
+   <div class="leaf" onclick="pickFromTree('${head[0]}')"><span class="node-code">${head[0]}</span> ${hl(head[1])} <span class="badge">elegir</span></div>
+   ${ (q?kids:children).map(e=>`<div class="leaf" onclick="pickFromTree('${e[0].replace(/'/g,"\\'")}')"><span class="node-code">${e[0]}</span> ${hl(e[1])}</div>`).join('') }
+  </details>`;
+ });
+ document.getElementById('tree').innerHTML=html||'<p class="empty" style="padding:10px">Sin resultados en las tablas para esa búsqueda.</p>';
+}
+function pickFromTree(code){
+ const e=SYS[system].data.find(x=>x[0]===code);if(!e)return;
+ lastCandidates=[{code:e[0],label:e[1],source:SYS[system].src}];
+ pick(0);
+}
+
+/* ============ CUTTER (tabla LC, algorítmico) ============ */
+function cutter(author,title){
+ let first=(author||'').split(';')[0].trim();
+ if(!first)return'';
+ /* Apellido: si hay coma, es lo que está antes ("Rivas, Manuel");
+    si no, es la última palabra ("Manuel Rivas" → Rivas) */
+ let name=first.includes(',')?first.split(',')[0]:first.split(/\s+/).pop();
+ name=norm(name).replace(/[^a-z]/g,'');
+ if(!name)return'';
+ const L=name[0].toUpperCase();const c2=name[1]||'';const c3=name[2]||'';
+ const pos=(c,pairs,def)=>{for(const[chars,n]of pairs){if(chars.includes(c))return n;}return def;};
+ let n1;
+ if('aeiou'.includes(name[0])) n1=pos(c2,[['b',2],['d',3],['lm',4],['n',5],['p',6],['r',7],['st',8],['uvwxyz',9]],3);
+ else if(name[0]==='s') n1=pos(c2,[['a',2],['c',3],['e',4],['hi',5],['mnop',6],['t',7],['u',8],['vwxyz',9]],4);
+ else if(name[0]==='q'&&c2==='u') n1=pos(c3,[['e',3],['i',4],['o',5],['r',6],['t',7],['y',8]],4);
+ else n1=pos(c2,[['a',3],['e',4],['i',5],['o',6],['r',7],['u',8],['y',9]],4);
+ const c=(name[0]==='q'&&c2==='u')?(name[3]||''):c3;
+ const n2=pos(c,[['abcd',3],['efgh',4],['ijkl',5],['mno',6],['pqrs',7],['tuv',8],['wxyz',9]],5);
+ const tLetter=(norm(title||'').match(/[a-z]/)||[''])[0];
+ return L+n1+n2+(tLetter||'');
+}
+
+/* ============ TEJUELO Y COPIA ============ */
+function updateTejuelo(){
+ document.getElementById('tj1').textContent=document.getElementById('f_code').value||'—';
+ document.getElementById('tj2').textContent=document.getElementById('f_cutter').value||'—';
+ document.getElementById('tj3').textContent=document.getElementById('f_year').value||'—';
+}
+function signatura(){
+ return [document.getElementById('f_code').value,document.getElementById('f_cutter').value,document.getElementById('f_year').value].filter(Boolean).join(' ');
+}
+function copyText(t,label){navigator.clipboard.writeText(t).then(()=>setStatus(label+' copiada al portapapeles.')).catch(()=>setStatus('No se pudo copiar. Seleccioná el texto a mano.',true));}
+function copySignatura(){copyText(signatura(),'Signatura');}
+function copyFicha(){
+ const g=id=>document.getElementById(id).value;
+ copyText(`Sistema: ${g('f_sys')}\nClasificación: ${g('f_code')} — ${g('f_label')}\nSignatura: ${signatura()}\nTítulo: ${g('f_title')}\nAutor: ${g('f_author')}\nAño: ${g('f_year')}`,'Ficha');
+}
+function clearForm(){FIELDS.forEach(f=>document.getElementById('in_'+f.id).value='');['f_sys','f_code','f_label','f_cutter','f_year','f_title','f_author'].forEach(id=>document.getElementById(id).value='');updateTejuelo();renderCandidates([]);setStatus('');}
+
+renderTree();
+</script>
+</body>
+</html>
