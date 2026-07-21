@@ -7,7 +7,8 @@ normalizado a la página. También consulta el archivo de autoridades de
 nombres (NAF) de la Library of Congress para verificar autores.
 
 Fuentes (fase 1):
-  · Library of Congress — SRU público, sin registro (lx2.loc.gov/sru/lcdb)
+  · Library of Congress — SRU público, sin registro (lx2.loc.gov:210/lcdb;
+    la ruta https /sru/lcdb quedó fuera de servicio con la migración a Folio, jul. 2025)
   · Deutsche Nationalbibliothek — SRU público, datos CC0 (services.dnb.de/sru/dnb)
   · National Library of Scotland — preparada pero DESACTIVADA: su acceso
     confirmado es Z39.50 (Alma); el endpoint SRU queda pendiente de verificar.
@@ -38,7 +39,7 @@ TIEMPO_MAX = 9  # segundos por fuente
 FUENTES = [
     {
         'clave': 'loc', 'nombre': 'Library of Congress', 'sigla': 'LoC', 'activa': True,
-        'base': 'https://lx2.loc.gov/sru/lcdb', 'esquema': 'marcxml',
+        'base': 'http://lx2.loc.gov:210/lcdb', 'esquema': 'marcxml',
         'idx': {'isbn': 'bath.isbn', 'titulo': 'dc.title', 'autor': 'dc.author'},
     },
     {
@@ -58,7 +59,7 @@ FUENTES = [
     },
 ]
 
-NAF_BASE = 'https://lx2.loc.gov/sru/naf'
+NAF_BASE = 'http://lx2.loc.gov:210/naf'
 
 
 # ---------------------------- utilidades MARC ----------------------------
