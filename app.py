@@ -171,10 +171,14 @@ def _cql(fuente, isbn, autor, titulo):
             partes.append('(' + ' or '.join('%s=%s' % (idx['isbn'], x) for x in v) + ')')
         else:
             partes.append('%s=%s' % (idx['isbn'], v[0]))
+    # Folio (el catálogo de LC desde jul. 2025) no matchea dc.title/dc.author
+    # con tildes: "túnel" da 0 resultados, "tunel" da los esperados. Las demás
+    # fuentes (DNB, BNE, BIBNA, BNA) sí indexan con tilde y no se tocan.
+    limpiar = _sin_tildes if fuente['clave'] == 'loc' else (lambda t: t)
     if autor:
-        partes.append('%s="%s"' % (idx['autor'], autor.replace('"', '')))
+        partes.append('%s="%s"' % (idx['autor'], limpiar(autor.replace('"', ''))))
     if titulo:
-        partes.append('%s="%s"' % (idx['titulo'], titulo.replace('"', '')))
+        partes.append('%s="%s"' % (idx['titulo'], limpiar(titulo.replace('"', ''))))
     return ' and '.join(partes)
 
 
